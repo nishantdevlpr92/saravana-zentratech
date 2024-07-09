@@ -13,3 +13,15 @@ services:
       - "8000:8000"
     depends_on:
       - redis
+
+
+  # react:
+  #   build:
+  #     context: ./frontend
+  #     dockerfile: Dockerfile.dev
+  #   ports:
+  #     - "3000:3000"
+  #   volumes:
+  #     - ./frontend:/app
+  #   stdin_open: true
+  #   tty: true

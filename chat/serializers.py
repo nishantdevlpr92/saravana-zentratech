@@ -4,16 +4,16 @@ from django.contrib.auth import get_user_model
 
 User = get_user_model()
 
+class UserBasicSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['id', 'username', 'first_name', 'last_name', 'email', 'is_active']
+
 class ChatSerializer(serializers.ModelSerializer):
-    sender_username = serializers.SerializerMethodField()
-    recipient_username = serializers.SerializerMethodField()
+    sender = UserBasicSerializer()
+    recipient = UserBasicSerializer()
 
     class Meta:
         model = Chat
-        fields = ['id', 'sender', 'sender_username', 'recipient', 'recipient_username', 'message', 'seen', 'created_at']
-
-    def get_sender_username(self, obj):
-        return obj.sender.username
-
-    def get_recipient_username(self, obj):
-        return obj.recipient.username
+        # depth = 1
+        fields = ['id', 'sender', 'recipient', 'message', 'seen', 'created_at']

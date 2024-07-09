@@ -2,7 +2,6 @@ from channels.generic.websocket import AsyncJsonWebsocketConsumer
 from django.contrib.auth.models import AnonymousUser
 from chat.middleware import JwtAuthMiddleware
 from channels.db import database_sync_to_async
-from chat.serializers import ChatSerializer
 from chat.models import Chat
 from django.db.models import Q
 
@@ -42,30 +41,12 @@ class PersonalChatConsumer(AsyncJsonWebsocketConsumer):
             self.channel_name
         )
 
-        chat_history = await self.get_chat_history()
-        await self.send_json(chat_history)
 
     def set_group_name(self):
         if self.recipient.id > self.sender.id:
             return f"{self.sender.id}-{self.recipient.id}"
         else:
             return f"{self.recipient.id}-{self.sender.id}"
-
-    @database_sync_to_async
-    def get_chat_history(self):
-        """
-        Retrieve the chat history between the sender and recipient.
-
-        Returns:
-            QuerySet: A queryset of Chat instances.
-        """
-        return ChatSerializer(
-            Chat.objects.filter(
-                Q(sender=self.sender, recipient=self.recipient) | 
-                Q(sender=self.recipient, recipient=self.sender)
-            ),
-            many=True
-        ).data
 
     async def receive_json(self, content, **kwargs):
         await database_sync_to_async(Chat.objects.create)(sender=self.sender, recipient=self.recipient, message=content["message"])
