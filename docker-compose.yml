@@ -5,10 +5,10 @@ services:
     image: redis
 
   django:
-    build: .
+    build: ./backend
     command: python manage.py runserver 0.0.0.0:8000
     volumes:
-      - .:/app
+      - ./backend:/app
     ports:
       - "8000:8000"
     depends_on:
@@ -18,7 +18,6 @@ services:
   # react:
   #   build:
   #     context: ./frontend
-  #     dockerfile: Dockerfile.dev
   #   ports:
   #     - "3000:3000"
   #   volumes:
