@@ -49,6 +49,10 @@ export default function Sidebar({ onFriendClick }) {
                         userData.friends.map(obj => obj.id).join(',')
                     }${
                         userData.friends.length > 0 ? ',' : ''
+                    }${
+                        userData.fr_to_user.map(obj => obj.from_user).join(',')
+                    }${
+                        userData.fr_to_user.length > 0 ? ',' : ''
                     }${state.user_id}`
                 );
                 setNotConnectedUsers(unfriendedResponse.data);
@@ -61,6 +65,17 @@ export default function Sidebar({ onFriendClick }) {
             fetchUserData();
         }
     }, [state.user_id]);
+
+    const handleAcceptInvite = (user) => {
+        setInvites((prev) => prev.filter((invite) => invite.from_user !== user.id));
+        setFriends((prev) => [...prev, user]);
+    };
+
+    const handleDeclineInvite = (user) => {
+        console.log('Declining invite:', user);
+        setInvites((prev) => prev.filter((invite) => invite.from_user !== user.id));
+        setNotConnectedUsers((prev) => [...prev, user]);
+    };
 
     return (
         <Drawer
@@ -104,11 +119,11 @@ export default function Sidebar({ onFriendClick }) {
                 <Divider />
 
                 <ListSubheader>Accept Invitation</ListSubheader>
-                <Invites invitationList={invites} />
+                <Invites onAccept={handleAcceptInvite} onDecline={handleDeclineInvite} invitationList={invites} />
                 <Divider />
 
                 <ListSubheader>Send Interest</ListSubheader>
-                <RequestUsers notConnectedUsersList={notConnectedUsers} />
+                <RequestUsers notConnectedUsersList={notConnectedUsers} setRequestPendingUsers={setrequestPendingUsers}/>
                 <Divider />
 
                 <ListSubheader>Pending Requests</ListSubheader>

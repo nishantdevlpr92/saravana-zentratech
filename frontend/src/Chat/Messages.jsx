@@ -14,12 +14,13 @@ export default function Messages({ friend }) {
     const [snackbarOpen, setSnackbarOpen] = useState(false);
     const [snackbarMessage, setSnackbarMessage] = useState('');
     const ws = useRef(null);
-    const {state} = useLocation();
+    const { state } = useLocation();
     const userId = state.user_id;
 
     console.log(userId);
 
     useEffect(() => {
+
         ws.current = new WebSocket(`ws://localhost:8000/wc/chat/${friend.id}/?token=${localStorage.getItem('jwt-access-token')}`);
 
         ws.current.onopen = (event) => {
@@ -48,6 +49,7 @@ export default function Messages({ friend }) {
         return () => {
             ws.current.close();
         };
+
     }, [friend.id, userId]);
 
     const handleSendMessage = () => {
@@ -66,7 +68,7 @@ export default function Messages({ friend }) {
     return (
         <>
             <ChatHeader name={friend.username} />
-            <Container sx={{ flexGrow: 1, p: 3 }}>
+            <Container sx={{ overflow: 'auto', flexGrow: 1, p: 3}}>
                 <Stack sx={{ width: '100%' }} spacing={2}>
                     {messages.map((msg, index) => (
                         msg.type === 'received' ?

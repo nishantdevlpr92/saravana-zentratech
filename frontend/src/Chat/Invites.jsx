@@ -4,7 +4,7 @@ import axiosInstance from '../AxiosInstance';
 import CheckIcon from '@mui/icons-material/Check';
 import ClearIcon from '@mui/icons-material/Clear';
 
-export default function Invites({ invitationList }) {
+export default function Invites({ invitationList, onAccept, onDecline }) {
     const [users, setUsers] = useState([]);
 
     useEffect(() => {
@@ -27,20 +27,52 @@ export default function Invites({ invitationList }) {
         }
     }, [invitationList]);
 
+    const handleAccept = async (user) => {
+        try {
+            const response = await axiosInstance.post('/friend-requests/accept/', { "user_id": user.id });
+            setUsers((prevUsers) => prevUsers.filter((user) => user.id !== user.id));
+            onAccept(user);
+        } catch (error) {
+            console.error('Error accepting friend request:', error);
+        }
+    };
+
+    const handleDecline = async (user) => {
+        try {
+            const response = await axiosInstance.post('/friend-requests/decline/', { "user_id": user.id });
+            console.log('Friend request declined:', response.data);
+            setUsers((prevUsers) => prevUsers.filter((user) => user.id !== user.id));
+            onDecline(user);
+        } catch (error) {
+            console.error('Error declining friend request:', error);
+        }
+    };
+
     return (
         <List sx={{ width: '100%', maxWidth: 360, bgcolor: 'background.paper' }}>
             {users.map((user, index) => (
                 <React.Fragment key={user.id}>
-                    <ListItem secondaryAction={
-                        <>
-                            <IconButton color="primary" aria-label="comment" sx={{ marginRight: 1 }}>
-                                <CheckIcon />
-                            </IconButton>
-                            <IconButton color="error" aria-label="comment">
-                                <ClearIcon />
-                            </IconButton>
-                        </>
-                    }>
+                    <ListItem 
+                        secondaryAction={
+                            <>
+                                <IconButton 
+                                    color="primary" 
+                                    aria-label="accept" 
+                                    sx={{ marginRight: 1 }} 
+                                    onClick={() => handleAccept(user)}
+                                >
+                                    <CheckIcon />
+                                </IconButton>
+                                <IconButton 
+                                    color="error" 
+                                    aria-label="decline" 
+                                    onClick={() => handleDecline(user)}
+                                >
+                                    <ClearIcon />
+                                </IconButton>
+                            </>
+                        }
+                    >
                         <ListItemAvatar>
                             <Avatar alt={user.username} src={`/static/images/avatar/s.jpg`} />
                         </ListItemAvatar>

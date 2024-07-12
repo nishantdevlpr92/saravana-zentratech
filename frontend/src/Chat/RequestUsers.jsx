@@ -4,7 +4,7 @@ import axiosInstance from '../AxiosInstance';
 import { useLocation } from 'react-router-dom';
 import Divider from '@mui/material/Divider';
 
-export default function RequestUsers({ notConnectedUsersList }) {
+export default function RequestUsers({ notConnectedUsersList, setRequestPendingUsers }) {
     const { state } = useLocation();
     const [users, setUsers] = useState([]);
 
@@ -12,13 +12,16 @@ export default function RequestUsers({ notConnectedUsersList }) {
         setUsers(notConnectedUsersList);
     }, [notConnectedUsersList]);
 
-    const handleRequestClick = async (userId) => {
+    const handleRequestClick = async (user) => {
         try {
             const response = await axiosInstance.post('/friend-requests/', {
                 from_user: state.user_id,
-                to_user: userId
+                to_user: user.id
             });
-            setUsers(prevUsers => prevUsers.filter(user => user.id !== userId));
+            console.log("1 ", user, users)
+            setUsers(prevUsers => prevUsers.filter(user => user.id !== user.id));
+            console.log("2 ",user, users)
+            setRequestPendingUsers(prev => [...prev, user]);
             console.log('Friend request:', response.data);
         } catch (error) {
             console.error('Error sending friend request:', error);
@@ -35,7 +38,7 @@ export default function RequestUsers({ notConnectedUsersList }) {
                         </ListItemAvatar>
                         <ListItemText primary={user.username} />
                         <ListItemSecondaryAction>
-                            <Button variant="contained" size="small" onClick={() => handleRequestClick(user.id)}>Request</Button>
+                            <Button variant="contained" size="small" onClick={() => handleRequestClick(user)}>Request</Button>
                         </ListItemSecondaryAction>
                     </ListItem>
                     {index !== users.length - 1 && <Divider variant="inset" component="li" />}
