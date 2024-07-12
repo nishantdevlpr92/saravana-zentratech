@@ -34,7 +34,6 @@ export default function Sidebar({ onFriendClick }) {
                 const userData = response.data;
 
                 setFriends(userData.friends);
-                console.log('User data:', userData);
                 document.title = `Hi, ${userData.username}`;
                 setrequestPendingUsers(userData.fr_from_user);
                 setInvites(userData.fr_to_user);
@@ -72,7 +71,6 @@ export default function Sidebar({ onFriendClick }) {
     };
 
     const handleDeclineInvite = (user) => {
-        console.log('Declining invite:', user);
         setInvites((prev) => prev.filter((invite) => invite.from_user !== user.id));
         setNotConnectedUsers((prev) => [...prev, user]);
     };

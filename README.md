@@ -22,3 +22,13 @@ To run the backend, follow these steps:
 The backend will be running on `http://localhost:8000`.
 
 Note: The backend is currently configured to run within a Docker container.
+
+## Features Including
+- User Authentication
+- Sending Interests
+- Accepting/Rejecting Interests
+- Chat System (Chat History as well)
+
+## Technology used
+- Django, Django channels, Redis
+- MUI, React

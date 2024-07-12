@@ -18,6 +18,8 @@ class ChatViewSet(viewsets.ModelViewSet):
     queryset = Chat.objects.all()
     serializer_class = ChatSerializer
     permission_classes = [IsAuthenticated]
+    filter_backends = [DjangoFilterBackend]
+    filterset_fields = ("id", "sender", "recipient", "message")
 
     @action(detail=False, methods=['get'])
     def user_chats(self, request):

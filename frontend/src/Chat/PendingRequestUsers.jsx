@@ -10,12 +10,12 @@ export default function PendingRequestUsers({ requestPendingUsers }) {
         const fetchPendingUsers = async () => {
             try {
                 const detailsPromises = requestPendingUsers.map(async (request) => {
+                    
                     const response = await axiosInstance.get(`/users/${request.to_user}`);
                     return response.data;
                 });
                 const pendingUsersData = await Promise.all(detailsPromises);
                 setUsers(pendingUsersData);
-                console.log('Pending users:', pendingUsersData);
             } catch (error) {
                 console.error('Error fetching pending users:', error);
             }

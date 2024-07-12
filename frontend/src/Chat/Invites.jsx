@@ -16,7 +16,6 @@ export default function Invites({ invitationList, onAccept, onDecline }) {
                 });
                 const pendingUsersData = await Promise.all(detailsPromises);
                 setUsers(pendingUsersData);
-                console.log('Invitation user:', pendingUsersData);
             } catch (error) {
                 console.error('Error fetching Invitation user:', error);
             }
@@ -40,7 +39,6 @@ export default function Invites({ invitationList, onAccept, onDecline }) {
     const handleDecline = async (user) => {
         try {
             const response = await axiosInstance.post('/friend-requests/decline/', { "user_id": user.id });
-            console.log('Friend request declined:', response.data);
             setUsers((prevUsers) => prevUsers.filter((user) => user.id !== user.id));
             onDecline(user);
         } catch (error) {

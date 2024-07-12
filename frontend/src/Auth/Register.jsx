@@ -13,7 +13,6 @@ function Register() {
     const handleRegister = (data) => {
         axiosInstance.post('/register/', data)
             .then((response) => {
-                console.log(response.data);
                 if (response.status === 201) {
                     navigate('/', { state: { message: "Registration successful. Please login." } });
                 } else {

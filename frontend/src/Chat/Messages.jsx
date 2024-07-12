@@ -7,6 +7,8 @@ import MessageRecieve from './MessageRecieve';
 import MessageSend from './MessageSend';
 import ChatHeader from './ChatHeader';
 import { useLocation } from 'react-router-dom';
+import axiosInstance from '../AxiosInstance';
+
 
 export default function Messages({ friend }) {
     const [messageInput, setMessageInput] = useState('');
@@ -17,15 +19,27 @@ export default function Messages({ friend }) {
     const { state } = useLocation();
     const userId = state.user_id;
 
-    console.log(userId);
-
     useEffect(() => {
-
-        ws.current = new WebSocket(`ws://localhost:8000/wc/chat/${friend.id}/?token=${localStorage.getItem('jwt-access-token')}`);
-
-        ws.current.onopen = (event) => {
-            console.log('WebSocket connection opened', event);
+        const fetchMessageHistory = async () => {
+            try {
+                const response = await axiosInstance.get('/chats/user_chats/', {
+                    params: {
+                        user1: userId,
+                        user2: friend.id,
+                    },
+                });
+                const messageHistory = response.data.map(msg => ({
+                    ...msg,
+                    type: msg.sender.id === userId ? 'send' : 'received',
+                }));
+                setMessages(messageHistory);
+            } catch (error) {
+                console.error('Error fetching message history:', error);
+            }
         };
+
+        fetchMessageHistory();
+        ws.current = new WebSocket(`ws://localhost:8000/wc/chat/${friend.id}/?token=${localStorage.getItem('jwt-access-token')}`);
 
         ws.current.onmessage = (event) => {
             const message = JSON.parse(event.data);
@@ -33,17 +47,12 @@ export default function Messages({ friend }) {
                 setSnackbarMessage(message.errors.join("\n"));
                 setSnackbarOpen(true);
             } else {
-                console.log('Received message:', message);
                 if (message.sender === userId) {
                     setMessages((prevMessages) => [...prevMessages, { ...message, type: 'send' }]);
                 } else {
                     setMessages((prevMessages) => [...prevMessages, { ...message, type: 'received' }]);
                 }
             }
-        };
-
-        ws.current.onclose = (event) => {
-            console.log('WebSocket connection closed', event);
         };
 
         return () => {
@@ -68,7 +77,7 @@ export default function Messages({ friend }) {
     return (
         <>
             <ChatHeader name={friend.username} />
-            <Container sx={{ overflow: 'auto', flexGrow: 1, p: 3}}>
+            <Container sx={{ overflow: 'auto', flexGrow: 1, p: 3 }}>
                 <Stack sx={{ width: '100%' }} spacing={2}>
                     {messages.map((msg, index) => (
                         msg.type === 'received' ?

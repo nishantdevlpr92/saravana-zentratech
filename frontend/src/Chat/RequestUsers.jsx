@@ -18,11 +18,18 @@ export default function RequestUsers({ notConnectedUsersList, setRequestPendingU
                 from_user: state.user_id,
                 to_user: user.id
             });
-            console.log("1 ", user, users)
-            setUsers(prevUsers => prevUsers.filter(user => user.id !== user.id));
-            console.log("2 ",user, users)
-            setRequestPendingUsers(prev => [...prev, user]);
-            console.log('Friend request:', response.data);
+
+            const index = users.findIndex(u => u.id === user.id);
+            if (index > -1) {
+                const updatedUsers = [...users];
+                updatedUsers.splice(index, 1);
+                setUsers(updatedUsers);
+            }
+
+            setRequestPendingUsers(prev => [...prev, {
+                from_user: state.user_id,
+                to_user: user.id
+            }]);
         } catch (error) {
             console.error('Error sending friend request:', error);
         }
