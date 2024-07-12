@@ -3,7 +3,6 @@ import { Link, useNavigate } from "react-router-dom";
 import axiosInstance from '../AxiosInstance';
 import { useForm } from "react-hook-form";
 import { useState } from "react";
-import { jwtDecode } from 'jwt-decode';
 
 
 function Register() {
@@ -14,11 +13,9 @@ function Register() {
     const handleRegister = (data) => {
         axiosInstance.post('/register/', data)
             .then((response) => {
-                if (response.status === 200) {
-                    const { refresh, access } = response.data;
-                    localStorage.setItem('jwt-refresh-token', refresh);
-                    localStorage.setItem('jwt-access-token', access);
-                    navigate('/chat', {state: jwtDecode(access)});
+                console.log(response.data);
+                if (response.status === 201) {
+                    navigate('/', { state: { message: "Registration successful. Please login." } });
                 } else {
                     alert('Registration failed');
                 }

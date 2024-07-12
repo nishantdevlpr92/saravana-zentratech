@@ -60,7 +60,7 @@ class FriendRequestViewSet(viewsets.ModelViewSet):
     filter_backends = [DjangoFilterBackend]
     filterset_fields = {
         'id': ['exact', 'in'],
-        'from_user': ['exact'],
-        'to_user': ['exact']
+        'from_user': ['exact', 'in'],
+        'to_user': ['exact', 'in'],
     }
 

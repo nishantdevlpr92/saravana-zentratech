@@ -17,12 +17,25 @@ class LoginSignUpSerializer(serializers.ModelSerializer):
         instance.save()
         return instance
 
-class UserSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = User
-        fields = ('id', 'username', 'first_name', 'last_name', 'email', 'is_active', "friends")
 
 class FriendRequestSerializer(serializers.ModelSerializer):
     class Meta:
         model = FriendRequest
         fields = '__all__'
+
+class ProfileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ('id', 'username', 'first_name', 'last_name', 'email', 'is_active')
+
+
+class UserSerializer(serializers.ModelSerializer):
+    fr_from_user = FriendRequestSerializer(
+        many=True, read_only=True)
+    fr_to_user = FriendRequestSerializer(many=True, read_only=True)
+    friends = ProfileSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = User
+        fields = ('id', 'username', 'first_name', 'last_name', 'email', 'is_active',
+                  "friends", "fr_from_user", "fr_to_user")

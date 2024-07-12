@@ -9,32 +9,58 @@ import List from '@mui/material/List';
 import Drawer from '@mui/material/Drawer';
 import Toolbar from '@mui/material/Toolbar';
 import Box from '@mui/material/Box';
-import { Button, ListItemSecondaryAction, Typography, ListItem } from '@mui/material';
+import { Typography } from '@mui/material';
 import axiosInstance from '../AxiosInstance';
+import RequestUsers from './RequestUsers';
+import { useLocation } from 'react-router-dom';
+import PendingRequestUsers from './PendingRequestUsers';
+import Invites from './Invites';
+
 
 const drawerWidth = 340;
 
-export default function Sidebar({ friends, users, onFriendClick }) {
-    const [friendDetails, setFriendDetails] = useState([]);
+
+export default function Sidebar({ onFriendClick }) {
+    const { state } = useLocation();
+    const [friends, setFriends] = useState([]);
+    const [notConnectedUsers, setNotConnectedUsers] = useState([]);
+    const [requestPendingUsers, setrequestPendingUsers] = useState([]);
+    const [invites, setInvites] = useState([]);
 
     useEffect(() => {
-        const fetchFriendDetails = async () => {
+        const fetchUserData = async () => {
             try {
-                const detailsPromises = friends.map(async (friend) => {
-                    const response = await axiosInstance.get(`/users/${friend}`);
-                    return response.data;
-                });
-                const friendDetailsData = await Promise.all(detailsPromises);
-                setFriendDetails(friendDetailsData);
+                const response = await axiosInstance.get(`/users/${state.user_id}/`);
+                const userData = response.data;
+
+                setFriends(userData.friends);
+                console.log('User data:', userData);
+                document.title = `Hi, ${userData.username}`;
+                setrequestPendingUsers(userData.fr_from_user);
+                setInvites(userData.fr_to_user);
+
+                // not connected user (all users excluding friends and request pending users)
+                const unfriendedResponse = await axiosInstance.get(
+                    `/users/?id__not=${
+                        userData.fr_from_user.map(obj => obj.to_user).join(',')
+                    }${
+                        userData.fr_from_user.length > 0 ? ',' : ''
+                    }${
+                        userData.friends.map(obj => obj.id).join(',')
+                    }${
+                        userData.friends.length > 0 ? ',' : ''
+                    }${state.user_id}`
+                );
+                setNotConnectedUsers(unfriendedResponse.data);
             } catch (error) {
-                console.error('Error fetching friend details:', error);
+                console.error('Error fetching user data:', error);
             }
         };
 
-        if (friends.length > 0) {
-            fetchFriendDetails();
+        if (state.user_id) {
+            fetchUserData();
         }
-    }, [friends]);
+    }, [state.user_id]);
 
     return (
         <Drawer
@@ -49,7 +75,7 @@ export default function Sidebar({ friends, users, onFriendClick }) {
             <Box sx={{ overflow: 'auto' }}>
                 <ListSubheader>Friends</ListSubheader>
                 <List sx={{ width: '100%', maxWidth: 360, bgcolor: 'background.paper' }}>
-                    {friendDetails.map((friend, index) => (
+                    {friends.map((friend, index) => (
                         <React.Fragment key={friend.id}>
                             <ListItemButton alignItems="flex-start" onClick={() => onFriendClick(friend)}>
                                 <ListItemAvatar>
@@ -62,37 +88,32 @@ export default function Sidebar({ friends, users, onFriendClick }) {
                                             <Typography
                                                 sx={{ display: 'inline' }}
                                                 component="span"
-                                                variant="body2"
                                                 color="text.primary"
+                                                variant="caption"
                                             >
-                                                {friend.username}
+                                                Start Conversation
                                             </Typography>
-                                            {` — ${friend.additional_info}`}
                                         </React.Fragment>
                                     }
                                 />
                             </ListItemButton>
-                            {index === friendDetails.length - 1 ? null : <Divider variant="inset" component="li" />}
+                            {index === friends.length - 1 ? null : <Divider variant="inset" component="li" />}
                         </React.Fragment>
                     ))}
                 </List>
                 <Divider />
+
+                <ListSubheader>Accept Invitation</ListSubheader>
+                <Invites invitationList={invites} />
+                <Divider />
+
                 <ListSubheader>Send Interest</ListSubheader>
-                <List>
-                    {users.map((user) => (
-                        <ListItem key={user.id} disablePadding>
-                            <ListItemButton>
-                                <ListItemAvatar>
-                                    <Avatar alt={user.username} src={`/static/images/avatar/s.jpg`} />
-                                </ListItemAvatar>
-                                <ListItemText primary={user.username} />
-                            </ListItemButton>
-                            <ListItemSecondaryAction>
-                                <Button variant="contained" size="small">Request</Button>
-                            </ListItemSecondaryAction>
-                        </ListItem>
-                    ))}
-                </List>
+                <RequestUsers notConnectedUsersList={notConnectedUsers} />
+                <Divider />
+
+                <ListSubheader>Pending Requests</ListSubheader>
+                <PendingRequestUsers requestPendingUsers={requestPendingUsers} />
+
             </Box>
         </Drawer>
     );

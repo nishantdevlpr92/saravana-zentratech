@@ -1,12 +1,14 @@
-import { Box, Container, Typography, FormControl, TextField, Button, Snackbar } from "@mui/material";
-import { Link, useNavigate } from "react-router-dom";
+import { Box, Container, Typography, FormControl, TextField, Button, Snackbar, Alert } from "@mui/material";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import axiosInstance from '../AxiosInstance';
 import { useForm } from "react-hook-form";
 import { useState } from "react";
 import { jwtDecode } from 'jwt-decode';
-
+import CheckIcon from '@mui/icons-material/Check';
 
 export default function Login() {
+    const location = useLocation();
+
     const { register, handleSubmit, formState: { errors }, setError, clearErrors } = useForm();
     const [error, setErrorState] = useState(null);
     const navigate = useNavigate();
@@ -18,7 +20,7 @@ export default function Login() {
                     const { refresh, access } = response.data;
                     localStorage.setItem('jwt-refresh-token', refresh);
                     localStorage.setItem('jwt-access-token', access);
-                    navigate('/chat', {state: jwtDecode(access)});
+                    navigate('/chat', { state: jwtDecode(access) });
                 } else {
                     alert('Login failed');
                 }
@@ -36,7 +38,8 @@ export default function Login() {
 
     return (
         <Container sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', height: '100vh' }}>
-            <Box height={'100%'} display={'flex'} justifyContent={'center'} alignItems={'center'}>
+            <Box height={'100%'} display={'flex'} flexDirection='column' justifyContent={'center'} alignItems={'center'}>
+                {location.state?.message && <Alert icon={<CheckIcon fontSize="inherit" />} severity="success">{location.state?.message}</Alert>}
                 <form onSubmit={handleSubmit(submitUser)}>
                     <Box
                         sx={{
