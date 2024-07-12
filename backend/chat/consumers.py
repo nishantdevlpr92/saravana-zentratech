@@ -34,13 +34,11 @@ class PersonalChatConsumer(AsyncJsonWebsocketConsumer):
         # TODO: elif User and recipient are not connected
 
         self.grp_name = self.set_group_name()
-        print(self.grp_name)
 
         await self.channel_layer.group_add(
             self.grp_name,
             self.channel_name
         )
-
 
     def set_group_name(self):
         if self.recipient.id > self.sender.id:
@@ -55,9 +53,9 @@ class PersonalChatConsumer(AsyncJsonWebsocketConsumer):
             {
                 "type": "chat.message",
                 "message": content["message"],
+                "sender": self.sender.id
             }
         )
-        self.sender, self.recipient
 
     async def chat_message(self, event):
-        await self.send_json({"message": event["message"]})
+        await self.send_json({"sender": event["sender"], "message": event["message"]})

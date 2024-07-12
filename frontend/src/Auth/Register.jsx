@@ -1,25 +1,24 @@
 import { Box, Typography, FormControl, Container, TextField, Button, Snackbar } from "@mui/material";
 import { Link, useNavigate } from "react-router-dom";
 import axiosInstance from '../AxiosInstance';
+import { useForm } from "react-hook-form";
 import { useState } from "react";
+import { jwtDecode } from 'jwt-decode';
+
 
 function Register() {
-    const [username, setUsername] = useState('');
-    const [password, setPassword] = useState('');
-    const [error, setError] = useState(null);
+    const { register, handleSubmit, formState: { errors }, setError, clearErrors } = useForm();
+    const [error, setErrorState] = useState(null);
     const navigate = useNavigate();
 
-    const handleRegister = (event) => {
-        event.preventDefault();
-        axiosInstance.post('/register/', { username, password })
+    const handleRegister = (data) => {
+        axiosInstance.post('/register/', data)
             .then((response) => {
                 if (response.status === 200) {
                     const { refresh, access } = response.data;
                     localStorage.setItem('jwt-refresh-token', refresh);
                     localStorage.setItem('jwt-access-token', access);
-                    setUsername('');
-                    setPassword('');
-                    navigate('/chat');
+                    navigate('/chat', {state: jwtDecode(access)});
                 } else {
                     alert('Registration failed');
                 }
@@ -29,18 +28,19 @@ function Register() {
                 const errorMessages = Object.values(error.response.data)
                     .flat()
                     .join(', ');
-                setError(errorMessages || 'An error occurred while registering.');
+                setErrorState(errorMessages || 'An error occurred while registering.');
             });
     };
 
     const handleCloseSnackbar = () => {
-        setError(null);
+        clearErrors();
+        setErrorState(null);
     };
 
     return (
         <Container sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', height: '100vh' }}>
             <Box height={'100%'} display={'flex'} justifyContent={'center'} alignItems={'center'}>
-                <form onSubmit={handleRegister}>
+                <form onSubmit={handleSubmit(handleRegister)}>
                     <Box
                         sx={{
                             width: 300,
@@ -69,10 +69,10 @@ function Register() {
                                 type="text"
                                 variant="outlined"
                                 fullWidth
-                                value={username}
-                                onChange={(e) => setUsername(e.target.value)}
+                                {...register('username', { required: 'Username is required' })}
                                 sx={{ marginTop: "0.6rem" }}
-                                required
+                                error={Boolean(errors.username)}
+                                helperText={errors.username?.message}
                             />
                         </FormControl>
                         <FormControl>
@@ -81,9 +81,9 @@ function Register() {
                                 type="password"
                                 variant="outlined"
                                 fullWidth
-                                value={password}
-                                onChange={(e) => setPassword(e.target.value)}
-                                required
+                                {...register('password', { required: 'Password is required' })}
+                                error={Boolean(errors.password)}
+                                helperText={errors.password?.message}
                             />
                         </FormControl>
                         <Button type="submit" size="large" variant="contained" sx={{ marginTop: "0.6rem" }}>

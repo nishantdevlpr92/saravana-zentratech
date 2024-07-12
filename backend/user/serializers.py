@@ -25,3 +25,4 @@ class UserSerializer(serializers.ModelSerializer):
 class FriendRequestSerializer(serializers.ModelSerializer):
     class Meta:
         model = FriendRequest
+        fields = '__all__'

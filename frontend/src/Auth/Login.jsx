@@ -1,46 +1,43 @@
 import { Box, Container, Typography, FormControl, TextField, Button, Snackbar } from "@mui/material";
 import { Link, useNavigate } from "react-router-dom";
 import axiosInstance from '../AxiosInstance';
-import {
-    useState,
-} from "react";
+import { useForm } from "react-hook-form";
+import { useState } from "react";
+import { jwtDecode } from 'jwt-decode';
+
 
 export default function Login() {
-    const [username, setUsername] = useState('');
-    const [password, setPassword] = useState('');
-    const [error, setError] = useState(null);
+    const { register, handleSubmit, formState: { errors }, setError, clearErrors } = useForm();
+    const [error, setErrorState] = useState(null);
     const navigate = useNavigate();
 
-    const submitUser = (event) => {
-        event.preventDefault();
-        axiosInstance.post('/token/', { username, password })
+    const submitUser = (data) => {
+        axiosInstance.post('/token/', data)
             .then((response) => {
                 if (response.status === 200) {
                     const { refresh, access } = response.data;
                     localStorage.setItem('jwt-refresh-token', refresh);
                     localStorage.setItem('jwt-access-token', access);
-                    setUsername('');
-                    setPassword('');
-                    navigate('/chat');
+                    navigate('/chat', {state: jwtDecode(access)});
                 } else {
                     alert('Login failed');
                 }
             })
             .catch((error) => {
                 console.error('Error:', error);
-                setError(error.response.data.detail)
-                // alert('An error occurred while logging in.');
+                setErrorState(error.response.data.detail);
             });
     };
 
     const handleCloseSnackbar = () => {
-        setError(null);
+        clearErrors();
+        setErrorState(null);
     };
 
     return (
         <Container sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', height: '100vh' }}>
             <Box height={'100%'} display={'flex'} justifyContent={'center'} alignItems={'center'}>
-                <form onSubmit={submitUser}>
+                <form onSubmit={handleSubmit(submitUser)}>
                     <Box
                         sx={{
                             width: 300,
@@ -69,10 +66,10 @@ export default function Login() {
                                 type="text"
                                 variant="outlined"
                                 fullWidth
-                                value={username}
-                                onChange={(e) => setUsername(e.target.value)}
+                                {...register('username', { required: 'Username is required' })}
                                 sx={{ marginTop: "0.6rem" }}
-                                required
+                                error={Boolean(errors.username)}
+                                helperText={errors.username?.message}
                             />
                         </FormControl>
                         <FormControl>
@@ -81,9 +78,9 @@ export default function Login() {
                                 type="password"
                                 variant="outlined"
                                 fullWidth
-                                value={password}
-                                onChange={(e) => setPassword(e.target.value)}
-                                required
+                                {...register('password', { required: 'Password is required' })}
+                                error={Boolean(errors.password)}
+                                helperText={errors.password?.message}
                             />
                         </FormControl>
                         <Button type="submit" size="large" variant="contained" sx={{ marginTop: "0.6rem" }}>

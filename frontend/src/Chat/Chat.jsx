@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Box from '@mui/material/Box';
 import AppBar from '@mui/material/AppBar';
 import CssBaseline from '@mui/material/CssBaseline';
@@ -7,34 +7,53 @@ import Typography from '@mui/material/Typography';
 import Sidebar from './Sidebar';
 import Messages from './Messages';
 import axiosInstance from '../AxiosInstance';
-import ChatHeader from './ChatHeader';
+import { Button } from '@mui/material';
+import { useLocation } from 'react-router-dom';
+
 
 export default function Chat() {
-    const [currentUser, setCurrentUser] = useState(null);
+    const { state } = useLocation();
+
     const [unfriendedUsers, setUnfriendedUsers] = useState([]);
     const [activeFriends, setActiveFriends] = useState([]);
+    const [selectedFriend, setSelectedFriend] = useState(null);
+    const wsRef = useRef(null);
 
     useEffect(() => {
-        axiosInstance.get('/users/my_details/')
-            .then(response => {
-                setCurrentUser("personal",response.data);
-                setActiveFriends(response.data.friends)
-            })
-            .catch(error => {
-                console.error('Error fetching current user details:', error);
-            });
+        const fetchUserData = async () => {
+            try {
+                const response = await axiosInstance.get(`/users/${state.user_id}/`);
+                const userData = response.data;
+                setActiveFriends(userData.friends);
 
-        axiosInstance.get('/users/unfriended_users/')
-            .then(response => {
-                setUnfriendedUsers(response.data); // Assuming response.data is an array of unfriended users
-            })
-            .catch(error => {
-                console.error('Error fetching unfriended users:', error);
-            });
-    }, []);
+                const unfriendedResponse = await axiosInstance.get(`/users/?id__not=${userData.friends.join(',')},${state.user_id}`);
+                setUnfriendedUsers(unfriendedResponse.data);
+            } catch (error) {
+                console.error('Error fetching user data:', error);
+            }
+        };
 
-    const handleUserClick = (user) => {
-        // Handle user click logic
+        if (state.user_id) {
+            fetchUserData();
+        }
+    }, [state.user_id]);
+
+
+    const getSelectedUser = (user) => {
+        setSelectedFriend(user);
+    };
+
+    const handleSendMessage = (message) => {
+        if (selectedFriend && wsRef.current && message.trim()) {
+            wsRef.current.send(JSON.stringify({ message }));
+        }
+    };
+
+
+    const handleLogout = () => {
+        localStorage.removeItem('jwt-access-token');
+        localStorage.removeItem('jwt-refresh-token');
+        window.location.href = '/';
     };
 
     return (
@@ -45,13 +64,14 @@ export default function Chat() {
                     <Typography variant="h6" noWrap component="div">
                         Zentratech
                     </Typography>
+                    <Box sx={{ flexGrow: 1 }} />
+                    <Button variant="contained" color="error" onClick={handleLogout}>Logout</Button>
                 </Toolbar>
             </AppBar>
-            <Sidebar friends={activeFriends} users={unfriendedUsers} onUserClick={handleUserClick} />
+            <Sidebar friends={activeFriends} users={unfriendedUsers} onFriendClick={getSelectedUser} />
             <Box display={'flex'} flexDirection={'column'} sx={{ height: '100vh', flexGrow: 1 }}>
                 <Toolbar />
-                <ChatHeader name={currentUser ? currentUser.username : ''} />
-                <Messages />
+                {selectedFriend ? <Messages friend={selectedFriend} /> : <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', flexGrow: 1 }}><p>Please select a friend</p></Box>}
             </Box>
         </Box>
     );
