@@ -21,7 +21,11 @@ To run the backend, follow these steps:
 
 The backend will be running on `http://localhost:8000`.
 
-Note: The backend is currently configured to run within a Docker container.
+Note: The backend is currently configured to run within a Docker container. 
+```
+id: admin
+psk: 123
+```
 
 ## Features Including
 - User Authentication
